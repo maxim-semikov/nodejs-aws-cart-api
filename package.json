@@ -18,7 +18,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "build:lambda": "next build && next-lambda-build"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.3",
@@ -33,7 +36,14 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "aws-cdk-lib": "^2.124.0",
+    "constructs": "^10.0.0",
+    "@codegenie/serverless-express": "^4.13.0",
+    "@vendia/serverless-express": "^4.12.6",
+    "aws-lambda": "^1.0.7",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.3",
@@ -58,7 +68,9 @@
     "ts-loader": "^9.4.3",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "@types/aws-lambda": "^8.10.136",
+    "serverless-offline": "^13.3.3"
   },
   "jest": {
     "moduleFileExtensions": [
