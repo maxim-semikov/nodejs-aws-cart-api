@@ -1,33 +1,46 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/services/users.service';
-import { User } from '../users/models';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
 // import { contentSecurityPolicy } from 'helmet';
 type TokenResponse = {
   token_type: string;
   access_token: string;
 };
 
+type RegisterPayload = {
+  email: string;
+  password: string;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     private jwtService: JwtService,
   ) {}
 
-  register(payload: User) {
-    const existingUser = this.usersService.findOne(payload.name);
+  async register(payload: RegisterPayload) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: payload.email },
+    });
 
     if (existingUser) {
-      throw new BadRequestException('User with such name already exists');
+      throw new BadRequestException('User with such email already exists');
     }
 
-    const { id: userId } = this.usersService.createOne(payload);
-    return { userId };
+    const user = this.userRepository.create(payload);
+    await this.userRepository.save(user);
+
+    return { userId: user.id };
   }
 
-  validateUser(name: string, password: string): User {
-    const user = this.usersService.findOne(name);
+  async validateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
 
     if (user && user.password === password) {
       return user;
@@ -48,7 +61,7 @@ export class AuthService {
   }
 
   private loginJWT(user: User): TokenResponse {
-    const payload = { username: user.name, sub: user.id };
+    const payload = { email: user.email, sub: user.id };
 
     return {
       token_type: 'Bearer',
@@ -57,12 +70,9 @@ export class AuthService {
   }
 
   private loginBasic(user: User): TokenResponse {
-    // const payload = { username: user.name, sub: user.id };
-    console.log(user);
-
     function encodeUserToken(user: User) {
-      const { name, password } = user;
-      const buf = Buffer.from([name, password].join(':'), 'utf8');
+      const { email, password } = user;
+      const buf = Buffer.from([email, password].join(':'), 'utf8');
 
       return buf.toString('base64');
     }

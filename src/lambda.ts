@@ -10,9 +10,18 @@ async function bootstrap(): Promise<Handler> {
   try {
     const app = await NestFactory.create(AppModule);
     app.enableCors({
-      origin: (_, callback) => callback(null, true),
+      origin: ['*'],
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: ['*'],
+      credentials: true,
     });
-    app.use(helmet());
+
+    app.use((req, res, next) => {
+      res.removeHeader('Content-Security-Policy');
+      res.removeHeader('Cross-Origin-Resource-Policy');
+      res.removeHeader('Cross-Origin-Opener-Policy');
+      next();
+    });
 
     await app.init();
     console.log('NestJS application initialized');

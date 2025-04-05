@@ -59,14 +59,10 @@ export class CartApiServiceStack extends cdk.Stack {
       authType: lambda.FunctionUrlAuthType.NONE,
       cors: {
         allowedOrigins: ['*'],
-        allowedMethods: [
-          lambda.HttpMethod.GET,
-          lambda.HttpMethod.DELETE,
-          lambda.HttpMethod.PUT,
-          lambda.HttpMethod.POST,
-        ],
+        allowedMethods: [lambda.HttpMethod.ALL],
         allowedHeaders: ['*'],
       },
+      invokeMode: lambda.InvokeMode.BUFFERED,
     });
 
     new cdk.CfnOutput(this, 'Url', { value: url });

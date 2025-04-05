@@ -11,12 +11,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { BasicAuthGuard } from '../auth';
-import { Order, OrderService } from '../order';
+import { OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { CartService } from './services';
-import { CreateOrderDto, PutCartPayload } from 'src/order/type';
+import { CreateOrderDto, OrderStatus, PutCartPayload } from 'src/order/type';
 import { Cart } from '../entities/cart.entity';
 import { CartItem } from '../entities/cartItem.entity';
+import { Order } from '../entities/order.entity';
 import { DataSource } from 'typeorm';
 import { CartStatuses } from './constants';
 import { calculateCartTotal } from './models-rules';
@@ -32,12 +33,12 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Get()
-  async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
+  async findUserCart(@Req() req: AppRequest): Promise<Cart> {
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
     );
 
-    return cart.items;
+    return cart;
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -68,65 +69,67 @@ export class CartController {
   @UseGuards(BasicAuthGuard)
   @Put('order')
   async checkout(@Req() req: AppRequest, @Body() body: CreateOrderDto) {
-    // Start a new transaction
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
       const userId = getUserIdFromRequest(req);
 
-      const cart = await queryRunner.manager.getRepository(Cart).findOne({
-        where: {
-          user_id: userId,
-          status: CartStatuses.OPEN,
-        },
-      });
+      return await this.dataSource.transaction(
+        async (transactionalEntityManager) => {
+          const cart = await transactionalEntityManager.findOne(Cart, {
+            where: {
+              user_id: userId,
+              status: CartStatuses.OPEN,
+            },
+          });
 
-      if (!cart) {
-        throw new BadRequestException('Cart is empty');
-      }
+          if (!cart) {
+            throw new BadRequestException('Cart is empty');
+          }
 
-      const items = await queryRunner.manager.getRepository(CartItem).find({
-        where: {
-          cart_id: cart.id,
-        },
-      });
-      if (!items.length) {
-        throw new BadRequestException('Cart is empty');
-      }
+          const items = await transactionalEntityManager.find(CartItem, {
+            where: {
+              cart_id: cart.id,
+            },
+          });
 
-      // Create order within transaction
-      const total = calculateCartTotal(items);
-      const order = this.orderService.create({
-        userId,
-        cartId: cart.id,
-        items: body.items,
-        address: body.address,
-        total,
-      });
+          if (!items.length) {
+            throw new BadRequestException('Cart is empty');
+          }
 
-      await queryRunner.manager.getRepository(Cart).update(
-        { id: cart.id },
-        {
-          status: CartStatuses.ORDERED,
-          updated_at: new Date(),
+          const total = calculateCartTotal(items);
+          const order = await this.orderService.create(
+            {
+              userId,
+              cartId: cart.id,
+              items: items.map((item) => ({
+                productId: item.product_id,
+                count: item.count,
+              })),
+              address: body.address,
+              total,
+            },
+            transactionalEntityManager,
+          );
+
+          await transactionalEntityManager.update(
+            Cart,
+            { id: cart.id },
+            {
+              status: CartStatuses.ORDERED,
+              updated_at: new Date(),
+            },
+          );
+
+          return { order };
         },
       );
-      await queryRunner.commitTransaction();
-
-      return { order };
     } catch (err) {
-      await queryRunner.rollbackTransaction();
       throw new BadRequestException(err.message);
-    } finally {
-      await queryRunner.release();
     }
   }
 
   @UseGuards(BasicAuthGuard)
   @Get('order')
-  getOrder(): Order[] {
+  async getOrder(): Promise<Order[]> {
     return this.orderService.getAll();
   }
 }
