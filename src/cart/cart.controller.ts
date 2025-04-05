@@ -14,7 +14,7 @@ import { BasicAuthGuard } from '../auth';
 import { OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { CartService } from './services';
-import { CreateOrderDto, OrderStatus, PutCartPayload } from 'src/order/type';
+import { CreateOrderDto, PutCartPayload } from 'src/order/type';
 import { Cart } from '../entities/cart.entity';
 import { CartItem } from '../entities/cartItem.entity';
 import { Order } from '../entities/order.entity';

@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Handler, Context, Callback } from 'aws-lambda';
 import { configure } from '@codegenie/serverless-express';
-import helmet from 'helmet';
 
 let server: Handler;
 
