@@ -13,23 +13,27 @@ import {
 import { BasicAuthGuard } from '../auth';
 import { Order, OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
-import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
-import { CartItem } from './models';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
+import { Cart } from '../entities/cart.entity';
+import { CartItem } from '../entities/cartItem.entity';
+import { DataSource } from 'typeorm';
+import { CartStatuses } from './constants';
+import { calculateCartTotal } from './models-rules';
 
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
     private cartService: CartService,
     private orderService: OrderService,
+    private readonly dataSource: DataSource,
   ) {}
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Get()
-  findUserCart(@Req() req: AppRequest): CartItem[] {
-    const cart = this.cartService.findOrCreateByUserId(
+  async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
+    const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
     );
 
@@ -39,12 +43,12 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Put()
-  updateUserCart(
+  async updateUserCart(
     @Req() req: AppRequest,
     @Body() body: PutCartPayload,
-  ): CartItem[] {
+  ): Promise<CartItem[]> {
     // TODO: validate body payload...
-    const cart = this.cartService.updateByUserId(
+    const cart = await this.cartService.updateByUserId(
       getUserIdFromRequest(req),
       body,
     );
@@ -56,38 +60,68 @@ export class CartController {
   @UseGuards(BasicAuthGuard)
   @Delete()
   @HttpCode(HttpStatus.OK)
-  clearUserCart(@Req() req: AppRequest) {
-    this.cartService.removeByUserId(getUserIdFromRequest(req));
+  async clearUserCart(@Req() req: AppRequest) {
+    await this.cartService.removeByUserId(getUserIdFromRequest(req));
   }
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Put('order')
-  checkout(@Req() req: AppRequest, @Body() body: CreateOrderDto) {
-    const userId = getUserIdFromRequest(req);
-    const cart = this.cartService.findByUserId(userId);
+  async checkout(@Req() req: AppRequest, @Body() body: CreateOrderDto) {
+    // Start a new transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!(cart && cart.items.length)) {
-      throw new BadRequestException('Cart is empty');
+    try {
+      const userId = getUserIdFromRequest(req);
+
+      const cart = await queryRunner.manager.getRepository(Cart).findOne({
+        where: {
+          user_id: userId,
+          status: CartStatuses.OPEN,
+        },
+      });
+
+      if (!cart) {
+        throw new BadRequestException('Cart is empty');
+      }
+
+      const items = await queryRunner.manager.getRepository(CartItem).find({
+        where: {
+          cart_id: cart.id,
+        },
+      });
+      if (!items.length) {
+        throw new BadRequestException('Cart is empty');
+      }
+
+      // Create order within transaction
+      const total = calculateCartTotal(items);
+      const order = this.orderService.create({
+        userId,
+        cartId: cart.id,
+        items: body.items,
+        address: body.address,
+        total,
+      });
+
+      await queryRunner.manager.getRepository(Cart).update(
+        { id: cart.id },
+        {
+          status: CartStatuses.ORDERED,
+          updated_at: new Date(),
+        },
+      );
+      await queryRunner.commitTransaction();
+
+      return { order };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(err.message);
+    } finally {
+      await queryRunner.release();
     }
-
-    const { id: cartId, items } = cart;
-    const total = calculateCartTotal(items);
-    const order = this.orderService.create({
-      userId,
-      cartId,
-      items: items.map(({ product, count }) => ({
-        productId: product.id,
-        count,
-      })),
-      address: body.address,
-      total,
-    });
-    this.cartService.removeByUserId(userId);
-
-    return {
-      order,
-    };
   }
 
   @UseGuards(BasicAuthGuard)

@@ -1,52 +1,74 @@
 import * as cdk from 'aws-cdk-lib';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import { join } from 'path';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 export class CartApiServiceStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const handler = new nodejs.NodejsFunction(this, 'CartApiServiceLambda', {
-      entry: join(__dirname, '../../src/lambda.ts'),
-      handler: 'handler',
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-      memorySize: 1024,
-      timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_WEEK,
-      environment: {
-        NODE_ENV: 'production',
+    const cartApiServiceFunc = new nodejs.NodejsFunction(
+      this,
+      'CartApiServiceLambda',
+      {
+        functionName: 'cartApiServiceLambda',
+        entry: join(__dirname, '../../dist/src/lambda.js'),
+        depsLockFilePath: join(__dirname, '../../package-lock.json'),
+        handler: 'handler',
+        runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
+        memorySize: 1024,
+        timeout: cdk.Duration.seconds(30),
+        logRetention: logs.RetentionDays.ONE_WEEK,
+        environment: {
+          NODE_ENV: 'production',
+          POSTGRES_HOST: process.env.POSTGRES_HOST || '',
+          POSTGRES_PORT: process.env.POSTGRES_PORT || '',
+          POSTGRES_DB: process.env.POSTGRES_DB || '',
+          POSTGRES_USER: process.env.POSTGRES_USER || '',
+          POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD || '',
+        },
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: 'node20',
+          externalModules: [
+            '@aws-sdk/*',
+            'aws-sdk',
+            'class-transformer',
+            'class-validator',
+            'crypto',
+            'node:crypto',
+          ],
+          nodeModules: [
+            '@nestjs/core',
+            '@nestjs/common',
+            '@nestjs/platform-express',
+            'reflect-metadata',
+            '@codegenie/serverless-express',
+          ],
+        },
       },
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        externalModules: [
-          'aws-sdk',
-          'class-transformer',
-          'class-validator',
-          '@nestjs/websockets',
-          '@nestjs/microservices',
-          '@nestjs/websockets/socket-module',
-          '@nestjs/microservices/microservices-module',
+    );
+
+    const { url } = cartApiServiceFunc.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+      cors: {
+        allowedOrigins: ['*'],
+        allowedMethods: [
+          lambda.HttpMethod.GET,
+          lambda.HttpMethod.DELETE,
+          lambda.HttpMethod.PUT,
+          lambda.HttpMethod.POST,
         ],
+        allowedHeaders: ['*'],
       },
     });
 
-    const api = new apigateway.RestApi(this, 'CartApiService', {
-      restApiName: 'Cart API Service',
-      deployOptions: {
-        stageName: 'prod',
-        tracingEnabled: true,
-      },
-    });
-
-    const integration = new apigateway.LambdaIntegration(handler);
-
-    api.root.addMethod('ANY', integration);
-    api.root.addProxy({
-      defaultIntegration: integration,
-      anyMethod: true,
-    });
+    new cdk.CfnOutput(this, 'Url', { value: url });
   }
 }

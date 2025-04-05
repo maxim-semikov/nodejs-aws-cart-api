@@ -16,9 +16,9 @@ export class AuthService {
   ) {}
 
   register(payload: User) {
-    const user = this.usersService.findOne(payload.name);
+    const existingUser = this.usersService.findOne(payload.name);
 
-    if (user) {
+    if (existingUser) {
       throw new BadRequestException('User with such name already exists');
     }
 
@@ -29,25 +29,25 @@ export class AuthService {
   validateUser(name: string, password: string): User {
     const user = this.usersService.findOne(name);
 
-    if (user) {
+    if (user && user.password === password) {
       return user;
     }
 
-    return this.usersService.createOne({ name, password });
+    return null;
   }
 
   login(user: User, type: 'jwt' | 'basic' | 'default'): TokenResponse {
     const LOGIN_MAP = {
-      jwt: this.loginJWT,
-      basic: this.loginBasic,
-      default: this.loginJWT,
+      jwt: this.loginJWT.bind(this),
+      basic: this.loginBasic.bind(this),
+      default: this.loginJWT.bind(this),
     };
     const login = LOGIN_MAP[type];
 
     return login ? login(user) : LOGIN_MAP.default(user);
   }
 
-  loginJWT(user: User) {
+  private loginJWT(user: User): TokenResponse {
     const payload = { username: user.name, sub: user.id };
 
     return {
@@ -56,7 +56,7 @@ export class AuthService {
     };
   }
 
-  loginBasic(user: User) {
+  private loginBasic(user: User): TokenResponse {
     // const payload = { username: user.name, sub: user.id };
     console.log(user);
 

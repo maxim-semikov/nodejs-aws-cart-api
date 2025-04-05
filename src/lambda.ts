@@ -1,20 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import serverlessExpress from '@vendia/serverless-express';
-import { Callback, Context, Handler } from 'aws-lambda';
+import { Handler, Context, Callback } from 'aws-lambda';
+import { configure } from '@codegenie/serverless-express';
+import helmet from 'helmet';
 
 let server: Handler;
 
 async function bootstrap(): Promise<Handler> {
   try {
     const app = await NestFactory.create(AppModule);
-    app.enableCors();
+    app.enableCors({
+      origin: (_, callback) => callback(null, true),
+    });
+    app.use(helmet());
 
     await app.init();
     console.log('NestJS application initialized');
 
     const expressApp = app.getHttpAdapter().getInstance();
-    return serverlessExpress({ app: expressApp });
+    return configure({ app: expressApp });
   } catch (error) {
     console.error('Failed to bootstrap application:', error);
     throw error;
