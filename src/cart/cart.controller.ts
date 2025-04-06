@@ -17,7 +17,6 @@ import { CartService } from './services';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
 import { Cart } from '../entities/cart.entity';
 import { CartItem } from '../entities/cartItem.entity';
-import { Order } from '../entities/order.entity';
 import { DataSource } from 'typeorm';
 import { CartStatuses } from './constants';
 import { calculateCartTotal } from './models-rules';
