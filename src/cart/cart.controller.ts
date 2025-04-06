@@ -83,7 +83,7 @@ export class CartController {
           });
 
           if (!cart) {
-            throw new BadRequestException('Cart is empty');
+            throw new BadRequestException('There are no carts in Open status');
           }
 
           const items = await transactionalEntityManager.find(CartItem, {
