@@ -18,14 +18,14 @@ export class CartService {
   async getCartById(cartId: string): Promise<Cart> {
     return this.cartRepository.findOne({
       where: { id: cartId },
-      relations: ['items'],
+      relations: { items: true },
     });
   }
 
   async findByUserId(user_id: string): Promise<Cart> {
     return this.cartRepository.findOne({
       where: { user_id },
-      relations: ['items'],
+      relations: { items: true },
     });
   }
 

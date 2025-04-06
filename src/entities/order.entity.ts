@@ -7,8 +7,11 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { Cart } from './cart.entity';
+import { CartItem } from './cartItem.entity';
 import { OrderStatus } from 'src/order/type';
 
 export interface PaymentData {
@@ -18,7 +21,10 @@ export interface PaymentData {
 }
 
 export interface DeliveryData {
-  address: string;
+    address: string;
+    firstName: string;
+    lastName: string;
+    comment: string;
 }
 
 @Entity('orders')
@@ -33,9 +39,6 @@ export class Order {
   cart_id: string;
 
   @Column('jsonb')
-  items: Array<{ productId: string; count: number }>;
-
-  @Column('jsonb')
   payment: PaymentData;
 
   @Column('jsonb')
@@ -47,7 +50,7 @@ export class Order {
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.Open,
+    default: OrderStatus.Create,
   })
   status: OrderStatus;
 
@@ -76,4 +79,8 @@ export class Order {
   @ManyToOne(() => Cart, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'cart_id' })
   cart: Cart;
+
+  @OneToMany(() => CartItem, (item) => item.cart)
+  @JoinColumn({ name: 'cart_id' })
+  items: CartItem[];
 }

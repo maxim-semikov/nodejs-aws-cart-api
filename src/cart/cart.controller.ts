@@ -21,6 +21,7 @@ import { Order } from '../entities/order.entity';
 import { DataSource } from 'typeorm';
 import { CartStatuses } from './constants';
 import { calculateCartTotal } from './models-rules';
+import { OrderStatus } from '../order/type';
 
 @Controller('api/profile/cart')
 export class CartController {
@@ -33,12 +34,12 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Get()
-  async findUserCart(@Req() req: AppRequest): Promise<Cart> {
+  async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
     );
 
-    return cart;
+    return cart.items;
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -100,11 +101,16 @@ export class CartController {
             {
               userId,
               cartId: cart.id,
-              items: items.map((item) => ({
-                productId: item.product_id,
-                count: item.count,
-              })),
+              items: body.items,
               address: body.address,
+              delivery: {
+                address: body.address.address,
+                firstName: body.address.firstName,
+                lastName: body.address.lastName,
+                comment: body.address.comment,
+              },
+              comments: body.address.comment,
+              status: OrderStatus.Create,
               total,
             },
             transactionalEntityManager,
@@ -129,7 +135,7 @@ export class CartController {
 
   @UseGuards(BasicAuthGuard)
   @Get('order')
-  async getOrder(): Promise<Order[]> {
+  async getOrder(): Promise<CreateOrderDto[]> {
     return this.orderService.getAll();
   }
 }

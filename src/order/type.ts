@@ -1,9 +1,8 @@
 export enum OrderStatus {
-  Open = 'OPEN',
-  Approved = 'APPROVED',
-  Confirmed = 'CONFIRMED',
-  Sent = 'SENT',
-  Completed = 'COMPLETED',
+  Create = 'CREATED',
+  Paid = 'PAID',
+  Shipped = 'SHIPPED',
+  Delivered = 'DELIVERED',
   Cancelled = 'CANCELLED',
 }
 
@@ -19,33 +18,34 @@ export type Address = {
   lastName: string;
   comment: string;
 };
+
 export type CreateOrderDto = {
-  items: Array<{ productId: string; count: 1 }>;
+  items: Array<{ productId: string; count: number }>;
   address: {
     comment: string;
     address: string;
     lastName: string;
     firstName: string;
   };
-  delivery: {
-    address: string;
-    lastName: string;
-    firstName: string;
-    comment: string;
-  };
-  comments: string | null;
-  status: string;
-  total: number;
 };
 
 export type PutCartPayload = {
   product: { description: string; id: string; title: string; price: number };
   count: number;
 };
+
 export type CreateOrderPayload = {
   userId: string;
   cartId: string;
   items: Array<{ productId: string; count: number }>;
   address: Address;
+  delivery: {
+    address: string;
+    firstName: string;
+    lastName: string;
+    comment: string;
+  };
+  comments: string;
+  status: OrderStatus;
   total: number;
 };
