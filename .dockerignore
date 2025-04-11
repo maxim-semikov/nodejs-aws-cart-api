@@ -1,0 +1,59 @@
+# Зависимости (не нужны, так как устанавливаются в контейнере)
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json.tmp
+.npm
+.yarn
+
+# Системные файлы (не нужны для работы приложения)
+.git
+.gitignore
+*.md
+.DS_Store
+.editorconfig
+
+# IDE и редакторы (только для разработки)
+.idea
+.vscode
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+
+# Тесты и документация (не нужны в продакшене)
+test
+coverage
+docs
+*.test.ts
+*.spec.ts
+jest.config.js
+.nyc_output
+
+# Собранные файлы (будут собраны в контейнере)
+dist
+build
+*.js.map
+*.d.ts
+
+# Временные файлы
+tmp
+temp
+*.log
+*.pid
+*.seed
+
+# Docker файлы (не нужны внутри образа)
+Dockerfile
+docker-compose*
+.docker
+.dockerignore
+
+# Инфраструктура и деплой (не нужны в образе)
+infrastructure
+scripts
+cdk.out
+cdk.json
+cdk.context.json
+*.sh 
