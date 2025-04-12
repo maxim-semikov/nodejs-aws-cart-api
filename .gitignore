@@ -45,3 +45,8 @@ cdk.context.json
 
 # TypeScript
 *.tsbuildinfo
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
