@@ -21,7 +21,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "cdk": "cdk",
     "deploy": "npm run build && cdk deploy",
-    "build:lambda": "next build && next-lambda-build"
+    "build:lambda": "next build && next-lambda-build",
+    "eb:deploy": "eb deploy"
   },
   "dependencies": {
     "@codegenie/serverless-express": "^4.16.0",
