@@ -1,4 +1,4 @@
-# Зависимости (не нужны, так как устанавливаются в контейнере)
+# Dependencies (not needed as they are installed in the container)
 node_modules
 npm-debug.log
 yarn-debug.log
@@ -7,14 +7,14 @@ package-lock.json.tmp
 .npm
 .yarn
 
-# Системные файлы (не нужны для работы приложения)
+# System files (not required for application operation)
 .git
 .gitignore
 *.md
 .DS_Store
 .editorconfig
 
-# IDE и редакторы (только для разработки)
+# IDE and editors (development only)
 .idea
 .vscode
 *.sublime-workspace
@@ -22,7 +22,7 @@ package-lock.json.tmp
 *.swp
 *.swo
 
-# Тесты и документация (не нужны в продакшене)
+# Tests and documentation (not needed in production)
 test
 coverage
 docs
@@ -31,26 +31,26 @@ docs
 jest.config.js
 .nyc_output
 
-# Собранные файлы (будут собраны в контейнере)
+# Built files (will be built in container)
 dist
 build
 *.js.map
 *.d.ts
 
-# Временные файлы
+# Temporary files
 tmp
 temp
 *.log
 *.pid
 *.seed
 
-# Docker файлы (не нужны внутри образа)
+# Docker files (not needed inside image)
 Dockerfile
 docker-compose*
 .docker
 .dockerignore
 
-# Инфраструктура и деплой (не нужны в образе)
+# Infrastructure and deployment (not needed in image)
 infrastructure
 scripts
 cdk.out
