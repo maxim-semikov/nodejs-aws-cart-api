@@ -2,7 +2,7 @@
 
 ### Create user and get auth token
 
-register user with `POST` https://ax3gt6lrzqyks2f64frhbfn5oa0btjhw.lambda-url.eu-central-1.on.aws/api/auth/register
+register user with `POST` http://maxim-semikov-cart-api-prod.eu-central-1.elasticbeanstalk.com/api/auth/register
 
 Body:
 
@@ -13,13 +13,13 @@ Body:
 }
 ```
 
-**get token** with `POST` https://ax3gt6lrzqyks2f64frhbfn5oa0btjhw.lambda-url.eu-central-1.on.aws/api/auth/login
+**get token** with `POST` http://maxim-semikov-cart-api-prod.eu-central-1.elasticbeanstalk.com/api/auth/login
 
 Body
 
 ```json
 {
-  "username": "your_github_login",
+  "username": "test@mail.com",
   "password": "TEST_PASSWORD"
 }
 ```
