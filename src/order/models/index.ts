@@ -7,7 +7,7 @@ export type Order = {
   cartId: string;
   address: Address;
   statusHistory: Array<{
-    status: OrderStatus.Open;
+    status: OrderStatus.Create;
     timestamp: number;
     comment: string;
   }>;

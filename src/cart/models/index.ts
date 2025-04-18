@@ -1,7 +1,4 @@
-export enum CartStatuses {
-  OPEN = 'OPEN',
-  STATUS = 'STATUS',
-}
+import { CartStatuses } from '../constants';
 
 export type Product = {
   id: string;
