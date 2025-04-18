@@ -1,0 +1,59 @@
+# Dependencies (not needed as they are installed in the container)
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json.tmp
+.npm
+.yarn
+
+# System files (not required for application operation)
+.git
+.gitignore
+*.md
+.DS_Store
+.editorconfig
+
+# IDE and editors (development only)
+.idea
+.vscode
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+
+# Tests and documentation (not needed in production)
+test
+coverage
+docs
+*.test.ts
+*.spec.ts
+jest.config.js
+.nyc_output
+
+# Built files (will be built in container)
+dist
+build
+*.js.map
+*.d.ts
+
+# Temporary files
+tmp
+temp
+*.log
+*.pid
+*.seed
+
+# Docker files (not needed inside image)
+Dockerfile
+docker-compose*
+.docker
+.dockerignore
+
+# Infrastructure and deployment (not needed in image)
+infrastructure
+scripts
+cdk.out
+cdk.json
+cdk.context.json
+*.sh 
